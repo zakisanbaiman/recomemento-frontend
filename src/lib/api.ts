@@ -4,7 +4,6 @@ export type Book = components["schemas"]["CreateBookDto"] & { id: number };
 
 type RecommendRequest = {
   genre: string;
-  type: string;
   purpose: string;
 };
 
@@ -21,5 +20,7 @@ export async function recommendBook(req: RecommendRequest): Promise<Book | null>
     body: JSON.stringify(req),
   });
   if (!res.ok) throw new Error('Failed to fetch');
-  return res.json();
+  const text = await res.text();
+  if (!text) return null;
+  return JSON.parse(text);
 }
