@@ -29,7 +29,6 @@ export default function BooksPage() {
             <div className="font-bold text-lg">{b.title}</div>
             <div>著者: {b.author}</div>
             <div>ジャンル: {b.genre}</div>
-            <div>タイプ: {b.type}</div>
             <div>目的: {b.purpose}</div>
             <div className="text-gray-600 mt-2">{b.description}</div>
           </li>
