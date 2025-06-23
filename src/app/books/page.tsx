@@ -17,19 +17,19 @@ export default function BooksPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div>読み込み中...</div>;
-  if (error) return <div>エラー: {error}</div>;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">書籍一覧</h1>
+      <h1 className="text-2xl font-bold mb-4">Books Collection</h1>
       <ul className="space-y-2">
         {books.map((b) => (
           <li key={b.id} className="border p-4 rounded shadow">
             <div className="font-bold text-lg">{b.title}</div>
-            <div>著者: {b.author}</div>
-            <div>ジャンル: {b.genre}</div>
-            <div>目的: {b.purpose}</div>
+            <div>Author: {b.author}</div>
+            <div>Genre: {b.genre}</div>
+            <div>Purpose: {b.purpose}</div>
             <div className="text-gray-600 mt-2">{b.description}</div>
           </li>
         ))}
