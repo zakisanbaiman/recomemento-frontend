@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { recommendBook } from "../../lib/api";
+import { recommendBook, ApiError } from "../../lib/api";
 import type { Book } from "../../lib/api";
 
 export default function RecommendPage() {
@@ -9,17 +9,32 @@ export default function RecommendPage() {
   const [result, setResult] = useState<Book | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'not-found' | 'server-error' | 'other'>('other');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setResult(null);
+    setErrorType('other');
+    
     try {
       const book = await recommendBook({ genre, purpose });
       setResult(book);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (e instanceof ApiError) {
+        setError(e.message);
+        if (e.status === 404) {
+          setErrorType('not-found');
+        } else if (e.status === 0) {
+          setErrorType('server-error');
+        } else {
+          setErrorType('other');
+        }
+      } else {
+        setError(e instanceof Error ? e.message : String(e));
+        setErrorType('other');
+      }
     } finally {
       setLoading(false);
     }
@@ -31,6 +46,51 @@ export default function RecommendPage() {
     { value: "Entertainment", label: "Entertainment" },
     { value: "Learning", label: "Learning" },
   ];
+
+  const renderError = () => {
+    if (!error) return null;
+
+    switch (errorType) {
+      case 'not-found':
+        return (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mt-4">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">📚</span>
+              <div>
+                <p className="font-semibold">No matching books found</p>
+                <p className="text-sm">{error}</p>
+                <p className="text-sm mt-1">Try selecting different criteria above.</p>
+              </div>
+            </div>
+          </div>
+        );
+      case 'server-error':
+        return (
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mt-4">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">🔌</span>
+              <div>
+                <p className="font-semibold">Connection Error</p>
+                <p className="text-sm">{error}</p>
+                <p className="text-sm mt-1">Please make sure the API server is running on port 3001.</p>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mt-4">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">⚠️</span>
+              <div>
+                <p className="font-semibold">Error</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="p-8 max-w-xl mx-auto">
@@ -66,7 +126,9 @@ export default function RecommendPage() {
           {loading ? "Searching..." : "Get Book Recommendation"}
         </button>
       </form>
-      {error && <div className="text-red-600 mt-4">Error: {error}</div>}
+      
+      {renderError()}
+      
       {result && (
         <div className="bg-white p-6 rounded shadow mt-6">
           <h2 className="text-xl font-semibold mb-2 text-black">Recommended Book</h2>
@@ -76,11 +138,6 @@ export default function RecommendPage() {
             Genre: {result.genre} ／ Purpose: {result.purpose}
           </div>
           <div className="text-black">{result.description}</div>
-        </div>
-      )}
-      {result === null && !loading && !error && (
-        <div className="bg-white p-6 rounded shadow mt-6 text-black">
-          No matching books found. Please try different criteria.
         </div>
       )}
     </div>
